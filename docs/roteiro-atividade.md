@@ -61,7 +61,7 @@ alimentar os incrementos 1–2.)
 3. Priorizar sugestões por **impacto × esforço**; aplicar as de alto impacto e baixo
    esforço como "ajustes finais" (Fase 4 do PLAIN).
 4. Registrar pendências rastreadas para incrementos 1–2.
-5. Escrever o relatório curto da atividade (df) e sugerir o commit correspondente.
+5. Escrever o relatório curto da atividade e sugerir o commit correspondente.
 
 ## 6. Critérios de aceite da Fase 4 (do PLAIN)
 

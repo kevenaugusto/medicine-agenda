@@ -1,16 +1,111 @@
-# React + Vite
+# Agenda de Medicamentos
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Aplicação **web progressiva (PWA)** para o gerenciamento de medicamentos: cadastra
+pacientes, medicamentos, doses e horários, organiza a **agenda diária** e emite
+**lembretes no navegador** no momento previsto de cada toma.
 
-Currently, two official plugins are available:
+Desenvolvida para a ação de extensão **“Aplicação para o Gerenciamento de
+Medicamentos”** (Projeto Integrador de Tecnologia da Informação I — UFMS Digital,
+2026.2), com público-alvo primário na equipe de cuidado do **Residencial Vila Mendonça**
+(Lar de Idosos). O planejamento completo está em [`PLAIN.md`](./PLAIN.md).
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+> ⚠️ **Ferramenta de apoio** — não substitui prescrição médica nem a orientação de
+> profissionais de saúde.
 
-## React Compiler
+## Funcionalidades
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+| | |
+|---|---|
+| **Pacientes** | Cadastro, edição, exclusão e busca por nome (ignora acentos) |
+| **Medicamentos** | Vinculados ao paciente, com dose/quantidade, unidade, instruções e múltiplos horários por medicamento |
+| **Agenda do dia** | Doses agrupadas por horário, próxima dose destacada, marcar como *tomada / atrasada / pulada* |
+| **Notificações** | Lembrete no horário cadastrado, com a aba aberta (ativa ou em segundo plano) |
+| **PWA** | Instalável, com uso offline após o primeiro carregamento |
+| **Persistência** | Todos os dados gravados localmente em **IndexedDB** — sem servidor e sem envio a nuvem |
 
-## Expanding the ESLint configuration
+## Stack
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- **React 19** + **Vite 8** (JavaScript/JSX, sem roteador externo — navegação por estado local)
+- **IndexedDB puro** (sem bibliotecas de wrapper): banco `medicine-agenda` com as object stores `pacientes`, `medicamentos` e `registros`
+- **Notification API** do navegador (agendador local: checagem a cada 30 s + re-sincronização ao voltar à aba)
+- **`vite-plugin-pwa`** (Workbox): manifest, service worker e pré-cache do app shell
+- **ESLint 10** com `eslint-plugin-react-hooks` (flat config) e ícones PWA gerados por script próprio sem dependências
+
+## Como executar
+
+Pré-requisito: **Node.js** com npm.
+
+```bash
+npm install        # instala as dependências
+npm run dev        # servidor de desenvolvimento → http://localhost:5173
+npm run lint       # ESLint (esperado: 0 problemas)
+npm run build      # gera o build de produção em dist/
+npm run preview    # serve o build → http://localhost:4173 (teste offline/PWA)
+```
+
+Regenerar os ícones PWA (opcional — já estão em `public/`):
+
+```bash
+node scripts/gerar-icones.mjs
+```
+
+Um caso fictício para demonstração pode ser carregado em **Configurações → Dados de
+demonstração** (útil para testar lembretes em horários próximos).
+
+## Estrutura do projeto
+
+```
+medicine-agenda/
+├─ public/                  # favicon e ícones PWA (192, 512)
+├─ scripts/
+│  └─ gerar-icones.mjs      # gera os ícones PWA (PNG, sem dependências)
+├─ src/
+│  ├─ App.jsx               # navegação entre visões (estado local)
+│  ├─ main.jsx              # bootstrap + service worker + agendador
+│  ├─ db/                   # IndexedDB puro (schema + repositórios)
+│  │  ├─ db.js              #   banco, transações e CRUD genérico
+│  │  ├─ pacientes.js
+│  │  ├─ medicamentos.js
+│  │  ├─ registros.js       #   administração (tomado/atrasado/pulado)
+│  │  ├─ agenda.js          #   montagem da agenda do dia
+│  │  └─ demo.js            #   dados fictícios de demonstração
+│  ├─ notifications/
+│  │  ├─ notifications.js   #   permissão e exibição
+│  │  └─ scheduler.js       #   checagem periódica e disparo no horário
+│  ├─ utils/format.js       # datas, horários e doses (pt-BR)
+│  ├─ views/                # AgendaDoDia, Pacientes, DetalhePaciente,
+│  │                        # FormPaciente, FormMedicamento, Configuracoes
+│  ├─ App.css
+│  └─ index.css
+├─ docs/                    # requisitos, estudo teórico, validação (ver abaixo)
+├─ index.html
+├─ vite.config.js           # + vite-plugin-pwa (manifest, workbox)
+├─ eslint.config.js
+└─ package.json
+```
+
+## Persistência e privacidade
+
+- Os dados ficam **apenas neste dispositivo e navegador**, no IndexedDB (`medicine-agenda`).
+- Não há contas, login, servidor ou sincronização: apagar os dados do site no navegador
+  remove os cadastros.
+
+## Limitações conhecidas
+
+- **Notificações**: disparam quando o navegador está **aberto** (aba ativa ou em segundo
+  plano). Com o navegador fechado não há disparo — limitação técnica de PWA local,
+  documentada na tela de Configurações e tratada como risco R1 no plano.
+- **Instalação**: distribuída em **localhost** (decisão de escopo). O build em `dist/` é
+  estático e, no futuro, pode ser publicado em hospedagem estática para instalação em
+  celulares — fora do escopo atual.
+
+## Documentação
+
+| Documento | Conteúdo |
+|-----------|----------|
+| [`PLAIN.md`](./PLAIN.md) | Plano de implementação: escopo MVP, arquitetura, roadmap, riscos, plano de testes |
+| [`docs/requisitos.md`](./docs/requisitos.md) | Requisitos funcionais e não funcionais com rastreabilidade ao documento-base |
+| [`docs/estudo-teorico.md`](./docs/estudo-teorico.md) | Estudo: adesão terapêutica, uso racional, PWA, IndexedDB, Notification API |
+| [`docs/fluxo-de-uso.md`](./docs/fluxo-de-uso.md) | Visões e fluxos de uso |
+| [`docs/validacao.md`](./docs/validacao.md) | Relatório de validação das Etapas 2 e 3 (testes e correções) |
+| [`docs/roteiro-atividade.md`](./docs/roteiro-atividade.md) | Roteiro da atividade extensionista (Etapa 4) |
