@@ -1,8 +1,8 @@
 // Camada de acesso ao IndexedDB (IndexedDB puro, sem biblioteca externa).
-// Banco: medicine-agenda — object stores: pacientes, medicamentos, registros.
+// Banco: medicine-agenda — object stores: pacientes, medicamentos, registros, consultas.
 
 const NOME_BANCO = 'medicine-agenda'
-const VERSAO = 1
+const VERSAO = 2 // v2: adiciona a store "consultas" (evolução aditiva)
 
 let conexaoPromise = null
 
@@ -26,6 +26,11 @@ function criarEsquema(db) {
     const store = db.createObjectStore('registros', { keyPath: 'id' })
     store.createIndex('medicamentoId', 'medicamentoId')
     store.createIndex('dia', 'dia')
+  }
+  if (!db.objectStoreNames.contains('consultas')) {
+    const store = db.createObjectStore('consultas', { keyPath: 'id' })
+    store.createIndex('pacienteId', 'pacienteId')
+    store.createIndex('dataHora', 'dataHora')
   }
 }
 
@@ -105,9 +110,14 @@ export async function excluir(storeNome, chave) {
 }
 
 export async function limparTudo() {
-  await emTransacao('readwrite', ['pacientes', 'medicamentos', 'registros'], (stores) => {
-    stores.pacientes.clear()
-    stores.medicamentos.clear()
-    stores.registros.clear()
-  })
+  await emTransacao(
+    'readwrite',
+    ['pacientes', 'medicamentos', 'registros', 'consultas'],
+    (stores) => {
+      stores.pacientes.clear()
+      stores.medicamentos.clear()
+      stores.registros.clear()
+      stores.consultas.clear()
+    },
+  )
 }

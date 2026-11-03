@@ -2,6 +2,7 @@
 
 import { adicionar, atualizar, emTransacao, listar, obter, uid } from './db.js'
 import { listarMedicamentosPorPaciente } from './medicamentos.js'
+import { removerConsultasDoPacienteNaTransacao } from './consultas.js'
 import { removerRegistrosDoMedicamentoNaTransacao } from './registros.js'
 
 export async function listarPacientes() {
@@ -41,16 +42,22 @@ export async function atualizarPaciente(id, dados) {
 }
 
 /**
- * Exclui o paciente e, em transação única, todos os seus medicamentos e os
- * registros de administração desses medicamentos (RN-02).
+ * Exclui o paciente e, em transação única, todos os seus medicamentos, os
+ * registros de administração desses medicamentos (RN-02) e as suas consultas
+ * médicas (RN-C4).
  */
 export async function excluirPaciente(id) {
   const medicamentos = await listarMedicamentosPorPaciente(id)
-  await emTransacao('readwrite', ['pacientes', 'medicamentos', 'registros'], (stores) => {
-    for (const medicamento of medicamentos) {
-      removerRegistrosDoMedicamentoNaTransacao(stores.registros, medicamento.id)
-      stores.medicamentos.delete(medicamento.id)
-    }
-    stores.pacientes.delete(id)
-  })
+  await emTransacao(
+    'readwrite',
+    ['pacientes', 'medicamentos', 'registros', 'consultas'],
+    (stores) => {
+      for (const medicamento of medicamentos) {
+        removerRegistrosDoMedicamentoNaTransacao(stores.registros, medicamento.id)
+        stores.medicamentos.delete(medicamento.id)
+      }
+      removerConsultasDoPacienteNaTransacao(stores.consultas, id)
+      stores.pacientes.delete(id)
+    },
+  )
 }
