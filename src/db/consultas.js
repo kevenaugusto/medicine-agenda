@@ -88,12 +88,16 @@ export async function excluirConsulta(id) {
 
 /**
  * Registra um alarme disparado na consulta (regra de não repetição, RN-C3).
- * O histórico é limitado às últimas 20 entradas.
+ * `horarioAlarme` é o horário previsto do lembrete, usado como chave da
+ * instância; o histórico é limitado às últimas 20 entradas.
  */
-export async function registrarDisparoDeAlarme(id, tipo) {
+export async function registrarDisparoDeAlarme(id, tipo, horarioAlarme) {
   const atual = await buscarConsulta(id)
   if (!atual) return
-  const disparos = [...(atual.disparos || []), { tipo, disparadoEm: new Date().toISOString() }]
+  const disparos = [
+    ...(atual.disparos || []),
+    { tipo, horarioAlarme, disparadoEm: new Date().toISOString() },
+  ]
   await atualizar('consultas', {
     ...atual,
     disparos: disparos.slice(-20),
