@@ -3,8 +3,8 @@
 **Projeto:** Agenda de Medicamentos (ação de extensão — UFMS Digital, 2026.2)
 **Ambiente:** localhost, navegador Chrome/Edge atualizado (dev server `npm run dev` e
 build `npm run preview`)
-**Status consolidado em:** 02/11/2026, a partir da validação manual executada ao longo
-das Etapas 2 e 3.
+**Status consolidado em:** 02/11/2026 (Etapas 2 e 3) e 03/11/2026 (evolução de
+consultas médicas — F9–F12), a partir da validação manual executada em localhost.
 
 ---
 
@@ -69,3 +69,44 @@ Registro com referência ao commit de correção (mantém rastreabilidade para o
   bloqueiam a entrega.
 - **Incrementos pós-MVP** (PLAIN §2.2): exportar/importar JSON, histórico por período,
   imprimibilidade e fonte grande — priorizados após a atividade com a comunidade.
+
+## 7. Evolução — consultas médicas (F9–F12)
+
+Evolução aditiva planejada em `docs/plano-consultas.md`; nenhuma alteração na parte de
+medicamentos. Validação executada em 03/11/2026 em localhost.
+
+### 7.1 Funcionais (consultas)
+
+| Cenário | Resultado |
+|---------|-----------|
+| CT-09 Criar consulta (paciente + dados + alarmes) com persistência | Validado |
+| CT-10 Editar consulta (data/hora e alarmes atualizados na lista) | Validado |
+| CT-11 Excluir consulta (confirmação; some da lista e do detalhe do paciente) | Validado |
+| CT-12 Validações de cadastro (paciente, campos obrigatórios, ≥1 alarme) | Validado |
+| CT-13 Migração do banco para v2 (dados existentes preservados; store `consultas` criada) | Validado |
+
+### 7.2 Notificações (consultas)
+
+| Cenário | Resultado |
+|---------|-----------|
+| NT-05 Disparo "no horário" | Validado |
+| NT-06 Disparo "15 minutos antes" | Validado |
+| NT-07 Disparo "1 dia antes" (24 h) e "1 hora antes" | Validado |
+| NT-08 Não repetição após recarga + reagendamento recalcula | Validado |
+| NT-09 Sem disparo retroativo (alarme já passado) | Validado |
+
+Limitações confirmadas (riscos do plano de consultas): com o navegador fechado não há
+disparo (RN-C1); alarme com horário já decorrido é ignorado, com nota no formulário
+(RN-C2); repetição pós-recarga evitada pelo `disparos` persistido na consulta (RN-C3).
+
+### 7.3 PWA
+
+| Cenário | Resultado |
+|---------|-----------|
+| PW-04 Offline com consultas cadastradas (`preview` + modo Offline do DevTools) | Validado |
+
+### 7.4 Nota de desenho
+
+A chave de não repetição do lembrete é o **horário previsto** do alarme (não o de
+disparo) — decisão aplicada ainda no desenvolvimento (Fase C-3), necessária para o
+comportamento correto de reagendamento (NT-08).

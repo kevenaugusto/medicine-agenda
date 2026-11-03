@@ -18,6 +18,7 @@ Medicamentos”** (Projeto Integrador de Tecnologia da Informação I — UFMS D
 |---|---|
 | **Pacientes** | Cadastro, edição, exclusão e busca por nome (ignora acentos) |
 | **Medicamentos** | Vinculados ao paciente, com dose/quantidade, unidade, instruções e múltiplos horários por medicamento |
+| **Consultas** | Agendamento de consultas médicas (especialidade, profissional, endereço, data/hora) com lembretes — 1 dia, 1 hora, 15 min antes ou no horário; edição e exclusão |
 | **Agenda do dia** | Doses agrupadas por horário, próxima dose destacada, marcar como *tomada / atrasada / pulada* |
 | **Notificações** | Lembrete no horário cadastrado, com a aba aberta (ativa ou em segundo plano) |
 | **PWA** | Instalável, com uso offline após o primeiro carregamento |
