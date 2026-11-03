@@ -26,14 +26,16 @@ export function formatarDataLonga(data) {
   return texto.charAt(0).toUpperCase() + texto.slice(1)
 }
 
-/** Ex.: "02/11/2026". */
+/** Ex.: "02/11/2026". Aceita Date ou string ISO ("YYYY-MM-DD"). */
 export function formatarDataCurta(data) {
   if (!data) return '—'
+  const d = typeof data === 'string' ? new Date(data) : data
+  if (Number.isNaN(d.getTime())) return '—'
   return new Intl.DateTimeFormat('pt-BR', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
-  }).format(data)
+  }).format(d)
 }
 
 /** Ex.: "50 mg", a partir de quantidade e unidade separadas. */
