@@ -1,122 +1,77 @@
 import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
 import './App.css'
+import AgendaDoDia from './views/AgendaDoDia.jsx'
+import Configuracoes from './views/Configuracoes.jsx'
+import DetalhePaciente from './views/DetalhePaciente.jsx'
+import FormMedicamento from './views/FormMedicamento.jsx'
+import FormPaciente from './views/FormPaciente.jsx'
+import Pacientes from './views/Pacientes.jsx'
 
-function App() {
-  const [count, setCount] = useState(0)
+export default function App() {
+  const [rota, setRota] = useState({ nome: 'agenda' })
+
+  const navegar = (nome, params = {}) => setRota({ nome, ...params })
+  const voltarDoPaciente = (atual) =>
+    atual.pacienteId ? () => navegar('paciente', { pacienteId: atual.pacienteId }) : () => navegar('pacientes')
+
+  let conteudo
+  switch (rota.nome) {
+    case 'pacientes':
+      conteudo = <Pacientes aoNavegar={navegar} />
+      break
+    case 'paciente-form':
+      conteudo = <FormPaciente pacienteId={rota.pacienteId} aoVoltar={voltarDoPaciente(rota)} />
+      break
+    case 'paciente':
+      conteudo = <DetalhePaciente pacienteId={rota.pacienteId} aoNavegar={navegar} />
+      break
+    case 'medicamento-form':
+      conteudo = (
+        <FormMedicamento
+          pacienteId={rota.pacienteId}
+          medicamentoId={rota.medicamentoId}
+          aoVoltar={() => navegar('paciente', { pacienteId: rota.pacienteId })}
+        />
+      )
+      break
+    case 'config':
+      conteudo = <Configuracoes />
+      break
+    default:
+      conteudo = <AgendaDoDia aoNavegar={navegar} />
+  }
+
+  const classeAtiva = (nome, grupo) => (rota.nome === nome || grupo.includes(rota.nome) ? ' ativo' : '')
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
+    <div className="app">
+      <header className="app-cabecalho">
+        <div className="app-titulo">
+          <h1>Agenda de Medicamentos</h1>
+          <span className="app-slogan">apoio à rotina de tratamento</span>
         </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+        <nav className="app-nav" aria-label="Navegação principal">
+          <button type="button" className={`nav-item${classeAtiva('agenda', [])}`} onClick={() => navegar('agenda')}>
+            Agenda do dia
+          </button>
+          <button
+            type="button"
+            className={`nav-item${classeAtiva('pacientes', ['paciente', 'paciente-form', 'medicamento-form'])}`}
+            onClick={() => navegar('pacientes')}
+          >
+            Pacientes
+          </button>
+          <button type="button" className={`nav-item${classeAtiva('config', [])}`} onClick={() => navegar('config')}>
+            Configurações
+          </button>
+        </nav>
+      </header>
 
-      <div className="ticks"></div>
+      <main className="app-conteudo">{conteudo}</main>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+      <footer className="app-rodape">
+        Aplicativo de apoio — não substitui prescrição nem a orientação de profissionais de saúde.
+      </footer>
+    </div>
   )
 }
-
-export default App
