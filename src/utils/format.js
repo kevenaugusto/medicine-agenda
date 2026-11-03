@@ -38,6 +38,20 @@ export function formatarDataCurta(data) {
   }).format(d)
 }
 
+/** Ex.: "02/11/2026 14:00". Aceita string "YYYY-MM-DDTHH:mm" ou Date. */
+export function formatarDataHora(dataHora) {
+  if (!dataHora) return '—'
+  const d = typeof dataHora === 'string' ? new Date(dataHora) : dataHora
+  if (Number.isNaN(d.getTime())) return '—'
+  const data = new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  }).format(d)
+  const hora = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+  return `${data} ${hora}`
+}
+
 /** Ex.: "50 mg", a partir de quantidade e unidade separadas. */
 export function formatarDose(quantidade, unidade) {
   const q = String(quantidade ?? '').trim()

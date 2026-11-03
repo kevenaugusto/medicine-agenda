@@ -2,7 +2,9 @@ import { useState } from 'react'
 import './App.css'
 import AgendaDoDia from './views/AgendaDoDia.jsx'
 import Configuracoes from './views/Configuracoes.jsx'
+import Consultas from './views/Consultas.jsx'
 import DetalhePaciente from './views/DetalhePaciente.jsx'
+import FormConsulta from './views/FormConsulta.jsx'
 import FormMedicamento from './views/FormMedicamento.jsx'
 import FormPaciente from './views/FormPaciente.jsx'
 import Pacientes from './views/Pacientes.jsx'
@@ -13,6 +15,8 @@ export default function App() {
   const navegar = (nome, params = {}) => setRota({ nome, ...params })
   const voltarDoPaciente = (atual) =>
     atual.pacienteId ? () => navegar('paciente', { pacienteId: atual.pacienteId }) : () => navegar('pacientes')
+  const voltarDaConsulta = (atual) =>
+    atual.pacienteId ? () => navegar('paciente', { pacienteId: atual.pacienteId }) : () => navegar('consultas')
 
   let conteudo
   switch (rota.nome) {
@@ -31,6 +35,18 @@ export default function App() {
           pacienteId={rota.pacienteId}
           medicamentoId={rota.medicamentoId}
           aoVoltar={() => navegar('paciente', { pacienteId: rota.pacienteId })}
+        />
+      )
+      break
+    case 'consultas':
+      conteudo = <Consultas aoNavegar={navegar} />
+      break
+    case 'consulta-form':
+      conteudo = (
+        <FormConsulta
+          consultaId={rota.consultaId}
+          pacienteId={rota.pacienteId}
+          aoVoltar={voltarDaConsulta(rota)}
         />
       )
       break
@@ -60,6 +76,13 @@ export default function App() {
             onClick={() => navegar('pacientes')}
           >
             Pacientes
+          </button>
+          <button
+            type="button"
+            className={`nav-item${classeAtiva('consultas', ['consulta-form'])}`}
+            onClick={() => navegar('consultas')}
+          >
+            Consultas
           </button>
           <button type="button" className={`nav-item${classeAtiva('config', [])}`} onClick={() => navegar('config')}>
             Configurações

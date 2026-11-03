@@ -552,6 +552,43 @@
   margin-top: 10px;
 }
 
+/* Consultas (FormConsulta e lista) */
+.opcoes-alarme {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.opcao-alarme {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--borda);
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: 0.92rem;
+  cursor: pointer;
+}
+
+.opcao-alarme:has(input:checked) {
+  background: var(--primaria-suave);
+  border-color: var(--primaria);
+  color: var(--primaria-hover);
+  font-weight: 600;
+}
+
+.grupo-consultas {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.consulta-paciente {
+  align-self: flex-start;
+  font-size: 0.92rem;
+}
+
 /* Acessibilidade: rótulo apenas para leitores de tela */
 .sr-only {
   position: absolute;

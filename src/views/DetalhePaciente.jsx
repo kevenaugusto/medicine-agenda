@@ -1,26 +1,30 @@
 import { useCallback, useEffect, useState } from 'react'
+import { excluirConsulta, listarConsultasPorPaciente, rotuloDoAlarme } from '../db/consultas.js'
 import { alternarVisibilidade, excluirMedicamento, listarMedicamentosPorPaciente } from '../db/medicamentos.js'
 import { buscarPaciente } from '../db/pacientes.js'
-import { formatarDataCurta, formatarDose } from '../utils/format.js'
+import { formatarDataCurta, formatarDataHora, formatarDose } from '../utils/format.js'
 
 export default function DetalhePaciente({ pacienteId, aoNavegar }) {
   const [paciente, setPaciente] = useState(null)
   const [medicamentos, setMedicamentos] = useState([])
+  const [consultas, setConsultas] = useState([])
   const [erro, setErro] = useState('')
 
   // Lê os dados sem atualizar estado — o efeito só sincroniza nas respostas.
   const buscarDados = useCallback(async () => {
-    const [p, meds] = await Promise.all([
+    const [p, meds, consultas] = await Promise.all([
       buscarPaciente(pacienteId),
       listarMedicamentosPorPaciente(pacienteId),
+      listarConsultasPorPaciente(pacienteId),
     ])
-    return { p, meds }
+    consultas.sort((a, b) => a.dataHora.localeCompare(b.dataHora))
+    return { p, meds, consultas }
   }, [pacienteId])
 
   useEffect(() => {
     let ativo = true
     buscarDados()
-      .then(({ p, meds }) => {
+      .then(({ p, meds, consultas }) => {
         if (!ativo) return
         if (!p) {
           setErro('Paciente não encontrado.')
@@ -28,6 +32,7 @@ export default function DetalhePaciente({ pacienteId, aoNavegar }) {
         }
         setPaciente(p)
         setMedicamentos(meds)
+        setConsultas(consultas)
       })
       .catch((falha) => {
         if (ativo) setErro(falha.message)
@@ -39,10 +44,11 @@ export default function DetalhePaciente({ pacienteId, aoNavegar }) {
 
   const alternar = async (medicamento, ativo) => {
     await alternarVisibilidade(medicamento.id, ativo)
-    const { p, meds } = await buscarDados()
+    const { p, meds, consultas } = await buscarDados()
     if (p) {
       setPaciente(p)
       setMedicamentos(meds)
+      setConsultas(consultas)
     }
   }
 
@@ -52,10 +58,25 @@ export default function DetalhePaciente({ pacienteId, aoNavegar }) {
     )
     if (!confirma) return
     await excluirMedicamento(medicamento.id)
-    const { p, meds } = await buscarDados()
+    const { p, meds, consultas } = await buscarDados()
     if (p) {
       setPaciente(p)
       setMedicamentos(meds)
+      setConsultas(consultas)
+    }
+  }
+
+  const excluirConsultaPaciente = async (consulta) => {
+    const confirma = window.confirm(
+      `Excluir a consulta de ${consulta.especialidade} em ${formatarDataHora(consulta.dataHora)}? Essa ação não pode ser desfeita.`,
+    )
+    if (!confirma) return
+    await excluirConsulta(consulta.id)
+    const { p, meds, consultas } = await buscarDados()
+    if (p) {
+      setPaciente(p)
+      setMedicamentos(meds)
+      setConsultas(consultas)
     }
   }
 
@@ -152,6 +173,64 @@ export default function DetalhePaciente({ pacienteId, aoNavegar }) {
                   Editar
                 </button>
                 <button type="button" className="botao-perigo" onClick={() => excluir(med)}>
+                  Excluir
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <header className="pagina-cabecalho com-acao">
+        <h3 className="secao-titulo">Consultas</h3>
+        <button
+          type="button"
+          className="botao primario"
+          onClick={() => aoNavegar('consulta-form', { pacienteId })}
+        >
+          Nova consulta
+        </button>
+      </header>
+
+      {consultas.length === 0 ? (
+        <div className="painel vazio">
+          <p>
+            <strong>Nenhuma consulta cadastrada.</strong> Registre as consultas médicas aqui
+            para receber lembretes.
+          </p>
+        </div>
+      ) : (
+        <ul className="lista-cards">
+          {consultas.map((consulta) => (
+            <li className="card" key={consulta.id}>
+              <div className="card-info">
+                <strong className="card-titulo">{consulta.especialidade}</strong>
+                <span className="card-detalhe">{formatarDataHora(consulta.dataHora)}</span>
+                <span className="card-detalhe">{consulta.profissional}</span>
+                {consulta.endereco && (
+                  <span className="card-detalhe secundaria">{consulta.endereco}</span>
+                )}
+                <div className="chip-horarios">
+                  {consulta.alarmes.map((codigo) => (
+                    <span key={codigo} className="chip chip-hora">
+                      {rotuloDoAlarme(codigo)}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <div className="card-acoes">
+                <button
+                  type="button"
+                  className="botao-secundario"
+                  onClick={() => aoNavegar('consulta-form', { pacienteId, consultaId: consulta.id })}
+                >
+                  Editar
+                </button>
+                <button
+                  type="button"
+                  className="botao-perigo"
+                  onClick={() => excluirConsultaPaciente(consulta)}
+                >
                   Excluir
                 </button>
               </div>
