@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { excluirPaciente, listarPacientes } from '../db/pacientes.js'
 import { formatarDataCurta } from '../utils/format.js'
 
@@ -11,13 +11,15 @@ export default function Pacientes({ aoNavegar }) {
   const [pacientes, setPacientes] = useState(null)
   const [busca, setBusca] = useState('')
 
-  const carregar = useCallback(async () => {
-    setPacientes(await listarPacientes())
-  }, [])
-
   useEffect(() => {
-    carregar()
-  }, [carregar])
+    let ativo = true
+    listarPacientes().then((dados) => {
+      if (ativo) setPacientes(dados)
+    })
+    return () => {
+      ativo = false
+    }
+  }, [])
 
   const filtrados = useMemo(() => {
     if (!pacientes) return []
@@ -32,7 +34,7 @@ export default function Pacientes({ aoNavegar }) {
     )
     if (!confirma) return
     await excluirPaciente(paciente.id)
-    await carregar()
+    setPacientes(await listarPacientes())
   }
 
   return (

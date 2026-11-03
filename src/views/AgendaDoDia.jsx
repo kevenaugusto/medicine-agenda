@@ -13,26 +13,32 @@ export default function AgendaDoDia({ aoNavegar }) {
   const [erro, setErro] = useState('')
   const [agenda, setAgenda] = useState(null)
 
-  const carregar = useCallback(async () => {
-    setCarregando(true)
-    try {
-      const [pacientes, medicamentos, registros] = await Promise.all([
-        listarPacientes(),
-        listarMedicamentos(),
-        buscarPorDia(diaKey(hoje)),
-      ])
-      setAgenda(montarAgenda({ pacientes, medicamentos, registros, data: hoje }))
-      setErro('')
-    } catch (falha) {
-      setErro(`Não foi possível carregar a agenda: ${falha.message}`)
-    } finally {
-      setCarregando(false)
-    }
+  // Lê os dados sem atualizar estado — o efeito só sincroniza nas respostas.
+  const buscarDados = useCallback(async () => {
+    const [pacientes, medicamentos, registros] = await Promise.all([
+      listarPacientes(),
+      listarMedicamentos(),
+      buscarPorDia(diaKey(hoje)),
+    ])
+    return montarAgenda({ pacientes, medicamentos, registros, data: hoje })
   }, [hoje])
 
   useEffect(() => {
-    carregar()
-  }, [carregar])
+    let ativo = true
+    buscarDados()
+      .then((dados) => {
+        if (ativo) setAgenda(dados)
+      })
+      .catch((falha) => {
+        if (ativo) setErro(`Não foi possível carregar a agenda: ${falha.message}`)
+      })
+      .finally(() => {
+        if (ativo) setCarregando(false)
+      })
+    return () => {
+      ativo = false
+    }
+  }, [buscarDados])
 
   const registrarDose = async (dose, status) => {
     await marcar({
@@ -42,12 +48,12 @@ export default function AgendaDoDia({ aoNavegar }) {
       dataHoraPrevista: dose.dataPrevista.toISOString(),
       status,
     })
-    await carregar()
+    setAgenda(await buscarDados())
   }
 
   const desfazerRegistro = async (dose) => {
     if (dose.registro) await excluirRegistro(dose.registro.id)
-    await carregar()
+    setAgenda(await buscarDados())
   }
 
   if (erro) {

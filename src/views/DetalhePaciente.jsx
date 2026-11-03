@@ -8,31 +8,42 @@ export default function DetalhePaciente({ pacienteId, aoNavegar }) {
   const [medicamentos, setMedicamentos] = useState([])
   const [erro, setErro] = useState('')
 
-  const carregar = useCallback(async () => {
-    setErro('')
-    try {
-      const [p, meds] = await Promise.all([
-        buscarPaciente(pacienteId),
-        listarMedicamentosPorPaciente(pacienteId),
-      ])
-      if (!p) {
-        setErro('Paciente não encontrado.')
-        return
-      }
-      setPaciente(p)
-      setMedicamentos(meds)
-    } catch (falha) {
-      setErro(falha.message)
-    }
+  // Lê os dados sem atualizar estado — o efeito só sincroniza nas respostas.
+  const buscarDados = useCallback(async () => {
+    const [p, meds] = await Promise.all([
+      buscarPaciente(pacienteId),
+      listarMedicamentosPorPaciente(pacienteId),
+    ])
+    return { p, meds }
   }, [pacienteId])
 
   useEffect(() => {
-    carregar()
-  }, [carregar])
+    let ativo = true
+    buscarDados()
+      .then(({ p, meds }) => {
+        if (!ativo) return
+        if (!p) {
+          setErro('Paciente não encontrado.')
+          return
+        }
+        setPaciente(p)
+        setMedicamentos(meds)
+      })
+      .catch((falha) => {
+        if (ativo) setErro(falha.message)
+      })
+    return () => {
+      ativo = false
+    }
+  }, [buscarDados])
 
   const alternar = async (medicamento, ativo) => {
     await alternarVisibilidade(medicamento.id, ativo)
-    await carregar()
+    const { p, meds } = await buscarDados()
+    if (p) {
+      setPaciente(p)
+      setMedicamentos(meds)
+    }
   }
 
   const excluir = async (medicamento) => {
@@ -41,7 +52,11 @@ export default function DetalhePaciente({ pacienteId, aoNavegar }) {
     )
     if (!confirma) return
     await excluirMedicamento(medicamento.id)
-    await carregar()
+    const { p, meds } = await buscarDados()
+    if (p) {
+      setPaciente(p)
+      setMedicamentos(meds)
+    }
   }
 
   if (erro) {
