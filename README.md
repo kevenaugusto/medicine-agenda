@@ -108,4 +108,5 @@ medicine-agenda/
 | [`docs/estudo-teorico.md`](./docs/estudo-teorico.md) | Estudo: adesão terapêutica, uso racional, PWA, IndexedDB, Notification API |
 | [`docs/fluxo-de-uso.md`](./docs/fluxo-de-uso.md) | Visões e fluxos de uso |
 | [`docs/validacao.md`](./docs/validacao.md) | Relatório de validação das Etapas 2 e 3 (testes e correções) |
+| [`docs/plano-consultas.md`](./docs/plano-consultas.md) | Plano da evolução: lembretes para consultas médicas (F9–F12) |
 | [`docs/roteiro-atividade.md`](./docs/roteiro-atividade.md) | Roteiro da atividade extensionista (Etapa 4) |
