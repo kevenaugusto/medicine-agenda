@@ -1,10 +1,51 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { limparTudo } from '../db/db.js'
 import { carregarDadosDeExemplo } from '../db/demo.js'
+import { ativarNotificacoes, statusNotificacao } from '../notifications/notifications.js'
+
+const ROTULO_STATUS = {
+  granted: 'Ativadas',
+  default: 'Não solicitadas',
+  denied: 'Negadas',
+  indisponivel: 'Não suportadas',
+}
 
 export default function Configuracoes() {
+  const [status, setStatus] = useState(() => statusNotificacao())
+  const [solicitando, setSolicitando] = useState(false)
   const [mensagem, setMensagem] = useState('')
   const [ocupado, setOcupado] = useState(false)
+
+  useEffect(() => {
+    let ativo = true
+    function aoMudarPermissao() {
+      if (ativo) setStatus(statusNotificacao())
+    }
+    // Acompanha mudanças de permissão feitas fora do aplicativo (em navegadores que suportam).
+    if (navigator.permissions?.query) {
+      navigator.permissions
+        .query({ name: 'notifications' })
+        .then((permissao) => permissao?.addEventListener('change', aoMudarPermissao))
+        .catch(() => {})
+    }
+    return () => {
+      ativo = false
+    }
+  }, [])
+
+  const solicitar = async () => {
+    setSolicitando(true)
+    const novo = await ativarNotificacoes()
+    setStatus(novo)
+    setSolicitando(false)
+    if (novo === 'granted') {
+      setMensagem(
+        'Notificações ativadas. Dica de teste: defina um horário 2 minutos à frente no medicamento e aguarde o lembrete.',
+      )
+    } else if (novo === 'denied') {
+      setMensagem('Permissão negada. Autorize nas configurações do navegador para receber lembretes.')
+    }
+  }
 
   const executar = async (acao, confirmacao, sucesso) => {
     if (confirmacao && !window.confirm(confirmacao)) return
@@ -52,10 +93,28 @@ export default function Configuracoes() {
 
         <article className="card bloco-config">
           <h3>Lembretes de medicação</h3>
-          <p className="nota">
-            A ativação das notificações de horário será implementada na próxima etapa do projeto
-            (Etapa 3). Até lá, a agenda do dia é a referência principal.
+          <p>
+            O lembrete é exibido quando o navegador está <strong>aberto</strong> (aba ativa ou em
+            segundo plano) no horário previsto de cada dose. Com o navegador fechado, não há
+            disparo — a agenda do dia é a referência.
           </p>
+
+          {status === 'indisponivel' ? (
+            <p className="nota">Este navegador não suporta a API de notificações.</p>
+          ) : status === 'granted' ? (
+            <p className="sucesso-campo">✓ Notificações ativadas para este dispositivo.</p>
+          ) : status === 'denied' ? (
+            <p className="erro-campo">
+              Permissão negada neste navegador. Autorize pela configuração de notificações do
+              navegador (para “localhost”) e recarregue esta página.
+            </p>
+          ) : (
+            <button type="button" className="botao primario" onClick={solicitar} disabled={solicitando}>
+              {solicitando ? 'Solicitando…' : 'Ativar notificações'}
+            </button>
+          )}
+
+          <span className="chip chip-hora">Status: {ROTULO_STATUS[status]}</span>
         </article>
 
         <article className="card bloco-config">
